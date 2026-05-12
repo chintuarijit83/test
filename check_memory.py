@@ -16,46 +16,52 @@ print(f"  Memory ID : {MEMORY_ID}")
 print(f"  User ID   : {MEMORY_USER_ID}")
 print("=" * 50)
 
-# Get namespaces from strategies
+# Get only USER_PREFERENCE namespace
 strategies = client.get_memory_strategies(MEMORY_ID)
-namespaces = []
+preference_namespace = None
 for s in strategies:
-    strategy_id = s.get("memoryStrategyId") or s.get("id") or s.get("strategyId") or ""
-    for ns in s.get("namespaces", []):
-        resolved = (ns
-            .replace("{memoryStrategyId}", strategy_id)
-            .replace("{memoryStrategyid}", strategy_id)
-            .replace("{actorId}", MEMORY_USER_ID)
-            .replace("{actorid}", MEMORY_USER_ID)
-            .replace("{sessionId}", MEMORY_SESSION_ID)
-            .replace("{sessionid}", MEMORY_SESSION_ID)
-        )
-        namespaces.append((s.get("name"), resolved))
-
-# Search and print only the memory text
-print("\nStored Preferences:\n")
-queries = ["hotel preference", "food diet", "budget", "travel interests"]
-
-found_any = False
-for strategy_name, ns in namespaces:
-    for query in queries:
-        try:
-            results = client.retrieve_memories(
-                memory_id=MEMORY_ID,
-                namespace=ns,
-                query=query,
-                top_k=3
+    if s.get("type") == "USER_PREFERENCE":
+        strategy_id = s.get("memoryStrategyId") or s.get("id") or s.get("strategyId") or ""
+        ns = s.get("namespaces", [None])[0]
+        if ns:
+            preference_namespace = (ns
+                .replace("{memoryStrategyId}", strategy_id)
+                .replace("{memoryStrategyid}", strategy_id)
+                .replace("{actorId}", MEMORY_USER_ID)
+                .replace("{actorid}", MEMORY_USER_ID)
+                .replace("{sessionId}", MEMORY_SESSION_ID)
+                .replace("{sessionid}", MEMORY_SESSION_ID)
             )
-            for r in results:
-                content = r.get("content", {})
-                text = content.get("text", "") if isinstance(content, dict) else ""
-                if text:
-                    print(f"  • {text}")
-                    found_any = True
-        except Exception:
-            pass
+        break
 
-if not found_any:
-    print("  No preferences found yet. Run the agent first and wait 1-2 minutes.")
+if not preference_namespace:
+    print("\nNo USER_PREFERENCE strategy found.")
+    exit(1)
+
+# Retrieve and deduplicate
+print("\nStored Preferences:\n")
+try:
+    results = client.retrieve_memories(
+        memory_id=MEMORY_ID,
+        namespace=preference_namespace,
+        query="travel preferences hotel food budget interests",
+        top_k=10
+    )
+
+    seen = set()
+    found_any = False
+    for r in results:
+        content = r.get("content", {})
+        text = content.get("text", "") if isinstance(content, dict) else ""
+        if text and text not in seen:
+            seen.add(text)
+            print(f"  • {text}")
+            found_any = True
+
+    if not found_any:
+        print("  No preferences found yet. Run the agent first and wait 1-2 minutes.")
+
+except Exception as e:
+    print(f"  Error: {e}")
 
 print("\n" + "=" * 50)
