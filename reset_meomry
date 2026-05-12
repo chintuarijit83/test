@@ -1,0 +1,47 @@
+import os
+from dotenv import load_dotenv
+from bedrock_agentcore.memory import MemoryClient
+
+load_dotenv()
+
+REGION = os.environ.get("AWS_REGION", "us-east-1")
+MEMORY_ID = os.environ.get("MEMORY_ID", "TravelMateMemory-1424245")
+MEMORY_USER_ID = os.environ.get("MEMORY_USER_ID", "travel_user_001")
+
+client = MemoryClient(region_name=REGION)
+
+print("=" * 50)
+print(f"  Memory ID : {MEMORY_ID}")
+print(f"  User ID   : {MEMORY_USER_ID}")
+print("=" * 50)
+
+confirm = input("\nThis will delete ALL saved preferences for this user. Continue? (yes/no): ").strip().lower()
+
+if confirm != "yes":
+    print("Reset cancelled.")
+    exit(0)
+
+try:
+    client.delete_memories(
+        memory_id=MEMORY_ID,
+        actor_id=MEMORY_USER_ID
+    )
+    print("\n✓ Memory reset successfully. All preferences cleared.")
+except AttributeError:
+    # Fallback: some SDK versions use a different method name
+    try:
+        client.delete_all_memories(
+            memory_id=MEMORY_ID,
+            actor_id=MEMORY_USER_ID
+        )
+        print("\n✓ Memory reset successfully. All preferences cleared.")
+    except Exception as e:
+        print(f"\nCould not reset via SDK: {e}")
+        print("\nTo reset manually:")
+        print("  1. Go to AWS Console → Bedrock → AgentCore → Memory")
+        print(f"  2. Open: {MEMORY_ID}")
+        print(f"  3. Find actor: {MEMORY_USER_ID} and delete their records")
+except Exception as e:
+    print(f"\nError: {e}")
+
+print("=" * 50)
