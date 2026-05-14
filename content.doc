@@ -1,0 +1,15 @@
+The tree diagram is now visible in the preview panel. It shows the exact same style as your screenshot — monospace font, dark background, `├──` / `└──` connectors — with the full hierarchy:
+
+```
+MEMORY_ID
+├── actor_id: "travel_user_001"
+│   ├── session_id: "default_session"  [active]
+│   │   ├── event_1 → [USER: ..., ASST: ...]
+│   │   └── ...
+│   └── session_id: "session_jan_01"   [old]
+└── actor_id: "travel_user_002"
+    ├── session_id: "default_session"  [active]
+    └── session_id: "session_feb_10"   [old]
+```
+
+You can also open [short_term_memory_diagram.html](capstone_project/claude_files/short_term_memory_diagram.html) directly in a browser.
