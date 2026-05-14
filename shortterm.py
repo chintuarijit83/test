@@ -63,6 +63,7 @@ def get_session_history():
 
 
 def reset_memory():
+    # Clear AgentCore events
     try:
         events = memory_client.list_events(
             memory_id=MEMORY_ID,
@@ -80,7 +81,18 @@ def reset_memory():
             )
     except Exception as e:
         logger.error(Fore.RED + f"reset failed: {e}")
-    logger.info(Fore.CYAN + "Memory reset complete.")
+
+    # Also clear Strands agent's internal conversation history
+    global agent
+    agent = Agent(
+        model=model,
+        system_prompt="""
+You are a helpful assistant with short term memory.
+Use all prior context provided to continue the conversation naturally.
+Respond only to the latest user message.
+"""
+    )
+    logger.info(Fore.CYAN + "Memory reset complete — AgentCore events deleted + Strands history cleared.")
 
 
 # ─────────────────────────────────────────
