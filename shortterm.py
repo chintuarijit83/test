@@ -27,23 +27,27 @@ memory_client = MemoryClient(region_name=REGION)
 # SHORT TERM MEMORY HELPERS
 # ─────────────────────────────────────────
 
-def add_event(role: str, content: str):
-    role = role.upper()
+def save_turn(user_input: str, agent_response: str):
+    """Save both user and assistant messages together in one event"""
     try:
         response = memory_client.create_event(
             memory_id=MEMORY_ID,
-            actor_id=role,
+            actor_id="USER",
             session_id=SESSION_ID,
-            messages=[(str(content), role)]
+            messages=[
+                (str(user_input), "USER"),
+                (str(agent_response), "ASSISTANT")
+            ]
         )
-        logger.info(Fore.MAGENTA + f"Created event: {response.get('eventId', 'unknown')}")
+        logger.info(Fore.MAGENTA + f"Turn saved → session: {SESSION_ID}")
         return response
     except Exception as e:
-        logger.error(Fore.RED + f"Failed to create event: {e}")
+        logger.error(Fore.RED + f"Failed to save turn: {e}")
         return {}
 
 
 def get_session_history():
+    """Retrieve full conversation history (both USER and ASSISTANT) for this session"""
     try:
         events = memory_client.list_events(
             memory_id=MEMORY_ID,
@@ -59,24 +63,23 @@ def get_session_history():
 
 
 def reset_memory():
-    for actor in ["USER", "ASSISTANT"]:
-        try:
-            events = memory_client.list_events(
-                memory_id=MEMORY_ID,
-                actor_id=actor,
-                session_id=SESSION_ID,
-                include_payload=False,
-                max_results=100
+    try:
+        events = memory_client.list_events(
+            memory_id=MEMORY_ID,
+            actor_id="USER",
+            session_id=SESSION_ID,
+            include_payload=False,
+            max_results=100
+        )
+        for e in (events if isinstance(events, list) else []):
+            memory_client.delete_event(
+                memoryId=MEMORY_ID,
+                sessionId=SESSION_ID,
+                eventId=e["eventId"],
+                actorId="USER"
             )
-            for e in (events if isinstance(events, list) else []):
-                memory_client.delete_event(
-                    memoryId=MEMORY_ID,
-                    sessionId=SESSION_ID,
-                    eventId=e["eventId"],
-                    actorId=actor
-                )
-        except Exception as e:
-            logger.error(Fore.RED + f"reset failed for {actor}: {e}")
+    except Exception as e:
+        logger.error(Fore.RED + f"reset failed: {e}")
     logger.info(Fore.CYAN + "Memory reset complete.")
 
 
@@ -135,13 +138,11 @@ def invoke(payload):
         reset_memory()
         return {"message": "Memory reset. Let's start fresh!"}
 
-    add_event("USER", user_input)
-
     prompt = build_prompt_with_history(user_input)
     response = agent(prompt)
     agent_response = response.message["content"][0]["text"]
 
-    add_event("ASSISTANT", agent_response)
+    save_turn(user_input, agent_response)
     return {"message": agent_response}
 
 
@@ -173,14 +174,11 @@ if __name__ == "__main__":
             print(Fore.YELLOW + "Memory reset. Starting fresh!\n")
             continue
 
-        add_event("USER", user_input)
-
         try:
             prompt = build_prompt_with_history(user_input)
             response = agent(prompt)
             agent_response = response.message["content"][0]["text"]
             print(Fore.BLUE + "\nAgent: " + Style.RESET_ALL + f"{agent_response}\n")
-            add_event("ASSISTANT", agent_response)
-            logger.info(Fore.MAGENTA + f"Turn saved to short term memory → session: {SESSION_ID}")
+            save_turn(user_input, agent_response)
         except Exception as e:
             print(Fore.RED + f"\nError: {e}\n")
