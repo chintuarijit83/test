@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: OpenWeatherMap Current Weather API
+  version: "2.5"
+  description: Current weather data for any location worldwide
+servers:
+  - url: https://api.openweathermap.org/data/2.5
+paths:
+  /weather:
+    get:
+      summary: Get current weather
+      operationId: getCurrentWeather
+      description: Get current weather data for a location by city name
+      parameters:
+        - name: q
+          in: query
+          description: City name e.g. London, Rome, Tokyo
+          required: false
+          schema:
+            type: string
+        - name: lat
+          in: query
+          description: Latitude
+          required: false
+          schema:
+            type: number
+        - name: lon
+          in: query
+          description: Longitude
+          required: false
+          schema:
+            type: number
+        - name: units
+          in: query
+          description: "Units: standard, metric, imperial"
+          required: false
+          schema:
+            type: string
+            default: metric
+        - name: lang
+          in: query
+          description: Language code e.g. en, fr, es
+          required: false
+          schema:
+            type: string
+            default: en
+      responses:
+        "200":
+          description: Current weather data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  weather:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        main:
+                          type: string
+                        description:
+                          type: string
+                  main:
+                    type: object
+                    properties:
+                      temp:
+                        type: number
+                      feels_like:
+                        type: number
+                      humidity:
+                        type: integer
+                      pressure:
+                        type: integer
+                  wind:
+                    type: object
+                    properties:
+                      speed:
+                        type: number
+                  visibility:
+                    type: integer
+                  clouds:
+                    type: object
+                    properties:
+                      all:
+                        type: integer
