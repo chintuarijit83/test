@@ -1,11 +1,18 @@
-1 agent — AgentCore Runtime, the only thing with an LLM reasoning loop.
-3 tools (deterministic, not LLM sub-agents):
-Kafka Live Stats → consults Metrics KB for how to build the current matrix
-Redshift Stats → consults Insights/Historical KB (which itself does schema→SQL→execute against Aurora/Redshift) for the baseline matrix
-Compare/Anomaly → consults Rules KB for thresholds, and is the only one that actually computes anything
-Sequencing: Runtime fans out to Kafka Live Stats + Redshift Stats in parallel first, then — only once both return — calls Compare, since Compare needs both matrices before it can do anything.
+Rule Agent — Evaluation Matrix
+Tier 0 — Shared business/fraud metrics (not an evaluation layer — the data itself, flowing through the pipeline)
+App count · OTP failure rate · device velocity · IP velocity · approval rate · decline reason distribution · fraud score distribution
 
-Kafka Live Stats → calls Metrics KB to get the definition of how to compute the current matrix (which fields, what aggregation) from live data
-Redshift Stats → calls Insights/Historical KB (which itself goes schema → SQL → execute against Aurora/Redshift) to get the definition of how to read/compute the baseline matrix
-Compare/Anomaly → calls Rules KB to get the actual thresholds/rule logic to apply once it has both matrices
-So it's not "one sub-agent talks to the KB on everyone's behalf" — it's three sub-agents, each consulting the specific KB relevant to its own matrix, which is exactly why the official diagram shows three separate KBs (Rules/Metrics/Insights-Historical) rather than one combined cache. That's a real correction to the design, not just a naming tweak.
+Tier 1 — Per-tool operational health (inline, every 3-hr cycle, captured via AgentCore Observability)
+
+Tool	Evaluates	Metrics
+Kafka Live Stats	Did it build the current matrix correctly?	Processing latency · missing records % · aggregation accuracy · schema validation success · matrix generation success
+Redshift Stats	Did it return the right baseline?	Baseline freshness (vs. calculated_at) · query latency · baseline coverage · retrieval success
+Compare/Anomaly	Did rules execute correctly, mechanically?	Rules executed count · rules triggered count · rule execution latency · execution error rate · correct segment matched (join accuracy — lives here, not Redshift Stats, since Redshift Stats bulk-fetches everything)
+Tier 2 — Orchestrator evaluation (inline, per cycle)
+
+Component	Evaluates	Metrics
+AgentCore Runtime	Correct orchestration	Were all 3 tools called? Did the 2 parallel ones actually run concurrently? Were retries needed? Overall workflow completion time? Tool call success rate?
+Tier 3 — Fraud-detection accuracy (offline, batch — NOT per-request; the layer ChatGPT's list was missing)
+
+Evaluates	Metrics	How
+Was the anomaly call actually correct?	Precision · recall · F1 · false-positive rate · false-negative rate — per rule	Replay historical labeled cases (Amazon PL attack, One Pay attack, Floor & Décor attack) through Compare's skills, offline; compare flagged output vs. known ground truth
