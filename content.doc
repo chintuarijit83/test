@@ -1,14 +1,11 @@
-gateway.py                    AgentCore Gateway              OpenWeatherMap
-    |                               |                              |
-    |-- Bearer Token (Cognito) -->  |                              |
-    |                               |                              |
-    |-- tools/call getCurrentWeather|                              |
-    |   { "q": "Rome" }         --> |                              |
-    |                               |                              |
-    |                               | fetches API key              |
-    |                               | from Secrets Manager         |
-    |                               |                              |
-    |                               |-- GET /weather?q=Rome&appid=YOUR_KEY -->|
-    |                               |                              |
-    |                               |<-- weather response ---------|
-    |<-- weather data --------------|                              |
+1 agent — AgentCore Runtime, the only thing with an LLM reasoning loop.
+3 tools (deterministic, not LLM sub-agents):
+Kafka Live Stats → consults Metrics KB for how to build the current matrix
+Redshift Stats → consults Insights/Historical KB (which itself does schema→SQL→execute against Aurora/Redshift) for the baseline matrix
+Compare/Anomaly → consults Rules KB for thresholds, and is the only one that actually computes anything
+Sequencing: Runtime fans out to Kafka Live Stats + Redshift Stats in parallel first, then — only once both return — calls Compare, since Compare needs both matrices before it can do anything.
+
+Kafka Live Stats → calls Metrics KB to get the definition of how to compute the current matrix (which fields, what aggregation) from live data
+Redshift Stats → calls Insights/Historical KB (which itself goes schema → SQL → execute against Aurora/Redshift) to get the definition of how to read/compute the baseline matrix
+Compare/Anomaly → calls Rules KB to get the actual thresholds/rule logic to apply once it has both matrices
+So it's not "one sub-agent talks to the KB on everyone's behalf" — it's three sub-agents, each consulting the specific KB relevant to its own matrix, which is exactly why the official diagram shows three separate KBs (Rules/Metrics/Insights-Historical) rather than one combined cache. That's a real correction to the design, not just a naming tweak.

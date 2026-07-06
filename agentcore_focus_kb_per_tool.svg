@@ -1,0 +1,157 @@
+<svg viewBox="0 0 1180 780" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>AWS Bedrock AgentCore components, corrected: each tool consults its own Knowledge Base</title>
+  <desc>One AgentCore Runtime agent, flanked by AgentCore Memory, Observability, and an LLM Gateway. It dispatches two tools in parallel: Kafka Live Stats, which consults the Metrics Knowledge Base, and Redshift Stats, which consults the Insights and Historical Knowledge Base, which itself fetches schema from Aurora and executes SQL against Redshift. Once both return, the Runtime invokes a third tool, Compare and Anomaly, which consults the Rules Knowledge Base and is the only tool performing real computation. The result returns to the Runtime and produces Alerts Generated and Audit and Review Dashboards. Total count: one agent, three deterministic tools, three knowledge bases which are not agents.</desc>
+
+  <style>
+    :root {
+      --font-sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --surface-1: #f7f7f8;
+      --surface-2: #ececed;
+      --text-primary: #1a1a1a;
+      --text-secondary: #55575c;
+      --text-muted: #8a8d93;
+      --text-accent: #5b5bd6;
+      --text-warning: #b45309;
+      --border: #d8d9dc;
+      --border-strong: #b8babf;
+      --border-stronger: #8a8d93;
+      --bg-accent: #eef0fc;
+      --border-accent: #6366f1;
+      --bg-success: #eafaf0;
+      --border-success: #16a34a;
+      --border-warning: #d97706;
+    }
+    text { font-family: var(--font-sans); }
+  </style>
+
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--border-stronger)"/>
+    </marker>
+    <marker id="arMuted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted)"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="780" fill="#ffffff"/>
+
+  <text x="590" y="20" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text-primary)">AgentCore — Each Tool Calls Its Own Knowledge Base</text>
+
+  <!-- Memory / Runtime / Observability -->
+  <rect x="40" y="44" width="180" height="64" rx="10" fill="var(--surface-1)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="130" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--text-primary)">AgentCore Memory</text>
+  <text x="130" y="80" text-anchor="middle" font-size="8.5" fill="var(--text-secondary)">cache recent run</text>
+  <text x="130" y="92" text-anchor="middle" font-size="8.5" fill="var(--text-secondary)">events/state</text>
+
+  <rect x="360" y="40" width="340" height="74" rx="10" fill="var(--bg-accent)" stroke="var(--border-accent)" stroke-width="1.5"/>
+  <text x="530" y="62" text-anchor="middle" font-size="13.5" font-weight="700" fill="var(--text-primary)">AgentCore Runtime</text>
+  <text x="530" y="78" text-anchor="middle" font-size="9.5" fill="var(--text-secondary)">the ONE LLM agent</text>
+  <text x="530" y="92" text-anchor="middle" font-size="8.5" fill="var(--text-muted)">sequences 3 tools, returns Compare's output unmodified</text>
+
+  <rect x="960" y="44" width="180" height="64" rx="10" fill="var(--surface-1)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="1050" y="65" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--text-primary)">AgentCore Observability</text>
+  <text x="1050" y="80" text-anchor="middle" font-size="8.5" fill="var(--text-secondary)">trace/log every</text>
+  <text x="1050" y="92" text-anchor="middle" font-size="8.5" fill="var(--text-secondary)">step for audit</text>
+
+  <path d="M358,77 L222,77" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <path d="M702,77 L958,77" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <path d="M530,114 L530,130" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="400" y="132" width="260" height="42" rx="9" fill="var(--surface-1)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="530" y="150" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text-primary)">LLM Gateway → Approved Model</text>
+  <text x="530" y="163" text-anchor="middle" font-size="8" fill="var(--text-secondary)">Nova / Claude / OpenAI</text>
+
+  <!-- Fan out to 2 parallel tools -->
+  <path d="M420,114 L330,208" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <path d="M640,114 L690,208" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="530" y="198" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-accent)">1. parallel tool calls (2 of 3 tools)</text>
+
+  <!-- Metrics KB -->
+  <rect x="20" y="210" width="150" height="110" rx="9" fill="var(--surface-1)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="95" y="250" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--text-primary)">Metrics KB</text>
+  <text x="95" y="266" text-anchor="middle" font-size="8" fill="var(--text-secondary)">defines how to</text>
+  <text x="95" y="278" text-anchor="middle" font-size="8" fill="var(--text-secondary)">compute current matrix</text>
+  <path d="M172,265 L188,265" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Kafka Live Stats -->
+  <rect x="190" y="210" width="280" height="110" rx="10" fill="var(--surface-1)" stroke="var(--border-warning)" stroke-dasharray="5 3" stroke-width="1.5"/>
+  <text x="330" y="232" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--text-primary)">Kafka Live Stats</text>
+  <text x="330" y="250" text-anchor="middle" font-size="9" fill="var(--text-secondary)">fetch + aggregate last</text>
+  <text x="330" y="263" text-anchor="middle" font-size="9" fill="var(--text-secondary)">N min of live events</text>
+  <text x="330" y="283" text-anchor="middle" font-size="8" fill="var(--text-secondary)">↖ calls Metrics KB for logic</text>
+  <text x="330" y="298" text-anchor="middle" font-size="8.5" font-weight="700" fill="var(--text-warning)">data source: TBD</text>
+
+  <!-- Redshift Stats -->
+  <rect x="550" y="210" width="280" height="110" rx="10" fill="var(--surface-1)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="690" y="232" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--text-primary)">Redshift Stats</text>
+  <text x="690" y="250" text-anchor="middle" font-size="9" fill="var(--text-secondary)">bulk-read pre-computed</text>
+  <text x="690" y="263" text-anchor="middle" font-size="9" fill="var(--text-secondary)">Baseline Matrix</text>
+  <text x="690" y="283" text-anchor="middle" font-size="8" fill="var(--text-secondary)">calls Insights/Historical KB ↗</text>
+  <text x="690" y="298" text-anchor="middle" font-size="8" fill="var(--text-muted)">no per-request compute</text>
+
+  <path d="M832,265 L848,265" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Insights/Historical KB -->
+  <rect x="850" y="210" width="180" height="110" rx="9" fill="var(--surface-1)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="940" y="232" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--text-primary)">Insights / Historical KB</text>
+  <text x="940" y="250" text-anchor="middle" font-size="8" fill="var(--text-secondary)">fetch schema → retrieve/</text>
+  <text x="940" y="262" text-anchor="middle" font-size="8" fill="var(--text-secondary)">generate SQL → execute</text>
+  <text x="940" y="278" text-anchor="middle" font-size="8" font-weight="700" fill="var(--text-warning)">dynamic vs. templated: TBD</text>
+
+  <path d="M940,320 L940,340" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="850" y="342" width="180" height="42" rx="8" fill="var(--surface-2)" stroke="var(--border)"/>
+  <text x="940" y="360" text-anchor="middle" font-size="9" fill="var(--text-secondary)">Aurora (schema) →</text>
+  <text x="940" y="373" text-anchor="middle" font-size="9" fill="var(--text-secondary)">Redshift (execute)</text>
+
+  <!-- Fan-in to Compare -->
+  <path d="M330,320 L440,428" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <path d="M690,320 L740,428" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="530" y="410" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-accent)">2. fan-in — Compare needs both results</text>
+
+  <!-- Compare -->
+  <rect x="340" y="430" width="500" height="110" rx="10" fill="var(--bg-success)" stroke="var(--border-success)" stroke-width="1.5"/>
+  <text x="590" y="454" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text-primary)">Compare / Anomaly</text>
+  <text x="590" y="472" text-anchor="middle" font-size="9.5" fill="var(--text-secondary)">the ONLY tool doing real computation</text>
+  <text x="590" y="490" text-anchor="middle" font-size="9" fill="var(--text-secondary)">bespoke skill per rule (z-score, share-shift…)</text>
+  <text x="590" y="508" text-anchor="middle" font-size="8.5" fill="var(--text-muted)">invoked by Runtime after both tools above return</text>
+
+  <path d="M842,485 L858,485" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="860" y="440" width="160" height="90" rx="9" fill="var(--surface-1)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="940" y="470" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--text-primary)">Rules KB</text>
+  <text x="940" y="488" text-anchor="middle" font-size="8" fill="var(--text-secondary)">thresholds + rule</text>
+  <text x="940" y="500" text-anchor="middle" font-size="8" fill="var(--text-secondary)">logic per rule</text>
+
+  <!-- Result -->
+  <path d="M590,540 L590,558" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="420" y="560" width="340" height="46" rx="9" fill="var(--bg-success)" stroke="var(--border-success)" stroke-width="1.5"/>
+  <text x="590" y="579" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--text-primary)">Rule Hits + Risk (JSON)</text>
+  <text x="590" y="593" text-anchor="middle" font-size="8.5" fill="var(--text-secondary)">returned to Runtime, unmodified</text>
+
+  <path d="M422,572 C 260,500 260,150 358,90" fill="none" stroke="var(--text-muted)" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arMuted)"/>
+
+  <!-- Outputs -->
+  <path d="M500,606 L440,646" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+  <path d="M680,606 L750,646" fill="none" stroke="var(--border-stronger)" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <rect x="330" y="648" width="220" height="50" rx="10" fill="var(--bg-success)" stroke="var(--border-success)" stroke-width="1.5"/>
+  <text x="440" y="668" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-primary)">Alerts Generated</text>
+  <text x="440" y="684" text-anchor="middle" font-size="8.5" fill="var(--text-secondary)">if anomaly found</text>
+
+  <rect x="640" y="648" width="230" height="50" rx="10" fill="var(--bg-success)" stroke="var(--border-success)" stroke-width="1.5"/>
+  <text x="755" y="668" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-primary)">Audit &amp; Review Dashboards</text>
+  <text x="755" y="684" text-anchor="middle" font-size="8.5" fill="var(--text-secondary)">always recorded</text>
+
+  <!-- Summary count box -->
+  <rect x="960" y="560" width="200" height="90" rx="10" fill="var(--surface-2)" stroke="var(--border-strong)" stroke-width="1.5"/>
+  <text x="1060" y="580" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--text-primary)">Count</text>
+  <text x="1060" y="596" text-anchor="middle" font-size="9" fill="var(--text-secondary)">1 agent (Runtime)</text>
+  <text x="1060" y="610" text-anchor="middle" font-size="9" fill="var(--text-secondary)">3 tools (sub-agents)</text>
+  <text x="1060" y="624" text-anchor="middle" font-size="9" fill="var(--text-secondary)">3 Knowledge Bases</text>
+  <text x="1060" y="638" text-anchor="middle" font-size="8" fill="var(--text-muted)">(KBs are not agents)</text>
+
+  <!-- Legend -->
+  <rect x="960" y="708" width="18" height="14" fill="none" stroke="var(--border-warning)" stroke-width="1.5" stroke-dasharray="4 2"/>
+  <text x="986" y="719" font-size="10" fill="var(--text-secondary)">open / TBD</text>
+  <rect x="1080" y="708" width="18" height="14" rx="5" fill="var(--bg-success)" stroke="var(--border-success)"/>
+  <text x="1106" y="719" font-size="10" fill="var(--text-secondary)">real compute</text>
+</svg>
