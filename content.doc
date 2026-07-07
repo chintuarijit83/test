@@ -1,18 +1,21 @@
-Rule Agent — Evaluation Matrix
-Tier 0 — Shared business/fraud metrics (not an evaluation layer — the data itself, flowing through the pipeline)
-App count · OTP failure rate · device velocity · IP velocity · approval rate · decline reason distribution · fraud score distribution
+| Area         | Metric                                     |
+| ------------ | ------------------------------------------ |
+| Routing      | Did it call the right skills?              |
+| Sequencing   | Did it call them in correct order?         |
+| Parallelism  | Did it run independent skills in parallel? |
+| Tool success | Tool-call success rate                     |
+| KB usage     | Did it retrieve the right rule/policy?     |
+| Reliability  | End-to-end workflow success rate           |
+| Latency      | Total time from 15-min trigger to result   |
+| Auditability | Was every decision trace logged?           |
 
-Tier 1 — Per-tool operational health (inline, every 3-hr cycle, captured via AgentCore Observability)
 
-Tool	Evaluates	Metrics
-Kafka Live Stats	Did it build the current matrix correctly?	Processing latency · missing records % · aggregation accuracy · schema validation success · matrix generation success
-Redshift Stats	Did it return the right baseline?	Baseline freshness (vs. calculated_at) · query latency · baseline coverage · retrieval success
-Compare/Anomaly	Did rules execute correctly, mechanically?	Rules executed count · rules triggered count · rule execution latency · execution error rate · correct segment matched (join accuracy — lives here, not Redshift Stats, since Redshift Stats bulk-fetches everything)
-Tier 2 — Orchestrator evaluation (inline, per cycle)
-
-Component	Evaluates	Metrics
-AgentCore Runtime	Correct orchestration	Were all 3 tools called? Did the 2 parallel ones actually run concurrently? Were retries needed? Overall workflow completion time? Tool call success rate?
-Tier 3 — Fraud-detection accuracy (offline, batch — NOT per-request; the layer ChatGPT's list was missing)
-
-Evaluates	Metrics	How
-Was the anomaly call actually correct?	Precision · recall · F1 · false-positive rate · false-negative rate — per rule	Replay historical labeled cases (Amazon PL attack, One Pay attack, Floor & Décor attack) through Compare's skills, offline; compare flagged output vs. known ground truth
+| Skill                         | Evaluation metrics                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| **Data Access Skill**         | data freshness, query latency, missing records %, schema validation          |
+| **Feature Curation Skill**    | feature accuracy, transformation success, aggregation correctness            |
+| **Comparison Skill**          | comparison correctness, threshold accuracy, rule-hit accuracy                |
+| **Real-Time Signal Skill**    | signal precision, duplicate signal rate, missed signal rate                  |
+| **Statistical Testing Skill** | z-score accuracy, percentile accuracy, false-positive reduction              |
+| **Rule/Policy Skill**         | correct policy retrieval, correct escalation mapping, KB retrieval precision |
+| **Alert Skill**               | alert latency, alert delivery success, duplicate alert rate                  |
