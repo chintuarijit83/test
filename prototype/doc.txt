@@ -1,0 +1,4 @@
+DataAgent asks the Metrics/Schema KB for the SQL template.
+DataAgent sends that SQL to RedshiftExecutor.
+RedshiftExecutor runs the query against Redshift.
+The returned rows become the BaselineMatrix.

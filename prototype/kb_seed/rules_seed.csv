@@ -1,0 +1,4 @@
+rule_id,name,description,threshold,severity,applicable_portfolios,skill_type,required_agents
+1,Unexplained application volume spike,Total applications by hour/day/channel vs expected baseline,,HIGH,,UCL,Data Agent|Feature Curation Agent|Comparison Agent|Statistical Testing Agent
+3,IP/device/email/phone velocity,Many applications from same/related IP device email domain phone prefix,,HIGH,,VENDOR_CODE_MATCH,Data Agent|Comparison Agent
+5,Small segment becomes unusually large,Segment share jumps from normal low % to much higher %,,MEDIUM,SYF_BNPL|CARE_CREDIT,PSI,Data Agent|Feature Curation Agent|Comparison Agent|Statistical Testing Agent
